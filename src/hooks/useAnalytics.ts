@@ -2,8 +2,21 @@
 
 import { useState, useEffect } from "react";
 
+export interface AnalyticsData {
+  timeseries: Array<{ date: string; totalSeconds: number; sessions: number }>;
+  byTask: Array<{ title: string; totalSeconds: number }>;
+  sessionCounts: Array<{ date: string; sessions: number }>;
+  summary: {
+    totalSeconds: number;
+    totalTasks: number;
+    completedCount: number;
+    topTask: { title: string; totalSeconds: number } | null;
+    granularity: string;
+  };
+}
+
 export default function useAnalytics(startIso: string, endIso: string, granularity = "day") {
-  const [data, setData] = useState<unknown>(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<unknown>(null);
 
@@ -33,5 +46,5 @@ export default function useAnalytics(startIso: string, endIso: string, granulari
     };
   }, [startIso, endIso, granularity]);
 
-  return { data, loading, error } as { data: unknown; loading: boolean; error: unknown };
+  return { data, loading, error } as { data: AnalyticsData | null; loading: boolean; error: unknown };
 }

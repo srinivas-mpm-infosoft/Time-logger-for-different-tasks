@@ -67,7 +67,7 @@ export async function GET(req: Request) {
     { $limit: 50 },
   ]).exec();
 
-  const byTask = (byTaskAgg as Array<{ _id: string; totalTime: number }>).map((r) => ({ title: r._1 || r._id, totalSeconds: r.totalTime }));
+  const byTask = (byTaskAgg as Array<{ _id: string; totalTime: number }>).map((r) => ({ title: r._id, totalSeconds: r.totalTime }));
 
   // session counts (per day)
   const sessionCounts = timeseries.map((t) => ({ date: t.date, sessions: t.sessions }));

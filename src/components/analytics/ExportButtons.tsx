@@ -32,7 +32,7 @@ function toCSV(data: any) {
   return lines.join("\n");
 }
 
-export default function ExportButtons({ data, start, end, rootRef }: { data: any; start: string; end: string; rootRef: React.RefObject<HTMLDivElement> }) {
+export default function ExportButtons({ data, start, end, rootRef }: { data: any; start: string; end: string; rootRef: React.RefObject<HTMLDivElement | null> }) {
   const handleCSV = (e: React.MouseEvent) => {
     e.preventDefault();
     const csv = toCSV(data);

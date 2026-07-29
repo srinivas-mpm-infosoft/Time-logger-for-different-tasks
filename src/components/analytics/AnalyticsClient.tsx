@@ -35,13 +35,13 @@ export default function AnalyticsClient() {
   const timeseries = data?.timeseries || [];
   const byTask = data?.byTask || [];
   const sessionCounts = data?.sessionCounts || [];
-  const summary = data?.summary || {};
+  const summary = data?.summary || { totalSeconds: 0, totalTasks: 0, completedCount: 0, topTask: null, granularity };
 
   // Prepare data for charts (ensure continuous dates)
   // For simplicity, use timeseries as-is; missing dates will not show points.
 
   return (
-    <div className="space-y-4" ref={rootRef as any} id="analytics-root">
+    <div className="space-y-4" ref={rootRef} id="analytics-root">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <button onClick={() => setPreset(7)} className="btn">7d</button>
