@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 
 export default function useAnalytics(startIso: string, endIso: string, granularity = "day") {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<any>(null);
+  const [data, setData] = useState<unknown>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -28,8 +28,10 @@ export default function useAnalytics(startIso: string, endIso: string, granulari
       }
     }
     fetchData();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [startIso, endIso, granularity]);
 
-  return { data, loading, error };
+  return { data, loading, error } as { data: unknown; loading: boolean; error: unknown };
 }
