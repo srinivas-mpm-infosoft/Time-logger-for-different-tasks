@@ -5,8 +5,13 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { format } from "date-fns";
 
+export const runtime = "nodejs";
+
+type SessionUser = { id?: string; _id?: string; email?: string } | undefined;
+type AppSession = { user?: SessionUser } | null;
+
 export async function GET(req: Request) {
-  const session = await auth();
+  const session = (await auth()) as AppSession;
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
@@ -22,17 +27,17 @@ export async function GET(req: Request) {
 
   await connectDB();
 
-  const userIdStr = (session as any).user?.id || (session as any).user?._id || (session as any).user?.email;
+  const userIdStr = session?.user?.id || session?.user?._id || session?.user?.email;
   if (!userIdStr) return NextResponse.json({ error: "Invalid user" }, { status: 400 });
 
-  let userId: any = userIdStr;
+  let userId: mongoose.Types.ObjectId | string = String(userIdStr);
   try {
-    userId = new mongoose.Types.ObjectId(userIdStr);
-  } catch (e) {
+    userId = new mongoose.Types.ObjectId(String(userIdStr));
+  } catch (_e) {
     // leave as-is (maybe stored as string)
   }
 
-  const match: any = { userId, logDate: { $gte: startKey, $lte: endKey } };
+  const match: Record<string, unknown> = { userId, logDate: { $gte: startKey, $lte: endKey } };
 
   // timeseries by date
   const timeseriesAgg = await Task.aggregate([
@@ -47,7 +52,7 @@ export async function GET(req: Request) {
     { $sort: { _id: 1 } },
   ]).exec();
 
-  const timeseries = timeseriesAgg.map((r: any) => ({ date: r._id, totalSeconds: r.totalTime, sessions: r.sessions }));
+  const timeseries = (timeseriesAgg as Array<{ _id: string; totalTime: number; sessions?: number }>).map((r) => ({ date: r._id, totalSeconds: r.totalTime, sessions: r.sessions || 0 }));
 
   // by task
   const byTaskAgg = await Task.aggregate([
@@ -62,13 +67,13 @@ export async function GET(req: Request) {
     { $limit: 50 },
   ]).exec();
 
-  const byTask = byTaskAgg.map((r: any) => ({ title: r._id, totalSeconds: r.totalTime }));
+  const byTask = (byTaskAgg as Array<{ _id: string; totalTime: number }>).map((r) => ({ title: r._1 || r._id, totalSeconds: r.totalTime }));
 
   // session counts (per day)
-  const sessionCounts = timeseries.map((t: any) => ({ date: t.date, sessions: t.sessions }));
+  const sessionCounts = timeseries.map((t) => ({ date: t.date, sessions: t.sessions }));
 
   // summary
-  const totalSeconds = timeseries.reduce((s: number, t: any) => s + (t.totalSeconds || 0), 0);
+  const totalSeconds = timeseries.reduce((s: number, t) => s + (t.totalSeconds || 0), 0);
   const totalTasks = await Task.countDocuments({ userId, logDate: { $gte: startKey, $lte: endKey } }).exec();
   const completedCount = await Task.countDocuments({ userId, status: "completed", logDate: { $gte: startKey, $lte: endKey } }).exec();
 
